@@ -20,14 +20,14 @@ plt.style.use('fivethirtyeight')
 
 matches=pd.read_csv('matches.csv')
 
-print(matches.shape)
+# print(matches.shape)
 
 '''
 Take the data from the 'matches.csv' file and then using the data make a model that may take input such as which 
 are the teams that are gonna play the match and then predict the winner based upon their stats .
 
 '''
-print(matches.head(2))
+# print(matches.head(2))
 
 '''
 id,season,city,date,team1,team2,toss_winner,toss_decision,result,dl_applied,winner,win_by_runs,win_by_wickets,player_of_match,venue,umpire1,umpire2,umpire3
@@ -48,10 +48,10 @@ print(matches.head(2))
 We have extracted the team1 , team2 , winner .
 '''
 wins=matches['winner'].value_counts()
-print(wins)
+# print(wins)
 
-wins.plot(kind='bar')
-plt.show()
+# wins.plot(kind='bar')
+# plt.show()
 
 '''Here we have got an overview of how our data looks on scale .'''
 
@@ -85,6 +85,10 @@ matches["target"]=(matches['winner']==matches['team1']).astype(int)
 Features and target ->
 
 '''
+
+from aliases import team_aliases, city_aliases
+#Importing the team and city dictionaries .
+
 x=matches[['team1','team2','city']]
 y=matches['target']
 
@@ -123,9 +127,13 @@ model.fit(x_train,y_train)
 y_predict=model.predict(x_test)
 
 #Taking input from the user ->
-team1=input("Enter team 1: ")
-team2=input("Enter team 2: ")
-city=input("Enter the city: ")
+team1=input("Enter team 1: ").strip().upper()
+team2=input("Enter team 2: ").strip().upper()
+city=input("Enter the city: ").strip().upper()
+
+team1=team_aliases.get(team1,team1)
+team2=team_aliases.get(team2,team2)
+city=city_aliases.get(city,city)
 
 #Creating Dataframe ->
 new_match=pd.DataFrame({
@@ -135,14 +143,21 @@ new_match=pd.DataFrame({
 })
 
 #Prediction model->
-predict=model.predict(new_match)
+prediction=model.predict(new_match)
 #This return an array ->
 
+probabilty=model.predict_proba(new_match)
+'''
+If team1 wins , the model returns 1 , else if the team2 wins the model returns 0.
+'''
 
 #Output ->
-if predict[0]==1:
+if prediction[0]==1:
     print("Predicted Winner: ",team1)
 else:
     print("Predicted Winner: ",team2)
+
+print("The winning percentage for Team 1 is: ",probabilty[0][1]*100,"%")
+print("The winning percentage for Team 2 is: ",probabilty[0][0]*100,"%")
 
 print("Accuracy: ",accuracy_score(y_test,y_predict))
